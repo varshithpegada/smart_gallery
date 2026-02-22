@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        text-align: center;
+    }
+
+    /* The Dashed Drag Zone */
+    .drop-zone {
+        border: 3px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 50px 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #f8fafc;
+        position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+        border-color: var(--primary);
+        background: #eff6ff;
+    }
+
+    .drop-zone-icon {
+        font-size: 4rem;
+        color: #94a3b8;
+        margin-bottom: 15px;
+    }
+
+    .drop-zone h3 {
+        margin: 0;
+        color: var(--text-main);
+        font-size: 1.2rem;
+    }
+
+    .drop-zone p {
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Preview Grid */
+    .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+        margin-top: 30px;
+    }
+
+    .preview-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #ddd;
+    }
+
+    .preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Submit Button */
+    .upload-btn {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 30px;
+        cursor: pointer;
+        margin-top: 30px;
+        display: none; /* Hidden until files are selected */
+        transition: transform 0.1s;
+    }
+
+    .upload-btn:hover { background-color: #1d4ed8; }
+    .upload-btn:active { transform: scale(0.98); }
+</style>
+
+<div class="upload-container">
+    <h2 style="margin-top:0;">Upload Photos</h2>
+    <p style="color: #666; margin-bottom: 30px;">Add photos to your smart gallery. The AI will organize them automatically.</p>
+
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+        {% csrf_token %}
+
+        <!-- Hidden File Input (Note: 'multiple' attribute is key) -->
+        <input type="file" name="image" id="file-input" multiple accept="image/*" hidden>
+
+        <!-- Visual Drop Zone -->
+        <div class="drop-zone" id="drop-zone">
+            <i class="fa-solid fa-cloud-arrow-up drop-zone-icon"></i>
+            <h3>Drag & Drop photos here</h3>
+            <p>or click to browse from computer</p>
+        </div>
+
+        <!-- Image Previews -->
+        <div class="preview-grid" id="preview-grid"></div>
+
+        <button type="submit" class="upload-btn" id="submit-btn">
+            <i class="fa-solid fa-bolt"></i> Upload & Process
+        </button>
+    </form>
+</div>
+
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const previewGrid = document.getElementById('preview-grid');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // 1. Handle Click on Box -> Trigger File Input
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // 2. Handle Drag & Drop Visuals
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+
+        // Transfer dropped files to the input element
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            handleFiles(fileInput.files);
+        }
+    });
+
+    // 3. Handle File Selection (via Click)
+    fileInput.addEventListener('change', () => {
+        handleFiles(fileInput.files);
+    });
+
+    // 4. Preview Function
+    function handleFiles(files) {
+        previewGrid.innerHTML = ''; // Clear old previews
+
+        if (files.length > 0) {
+            submitBtn.style.display = 'inline-block';
+            submitBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Upload ${files.length} Photos`;
+
+            // Loop through files to show thumbnails
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `<img src="${e.target.result}">`;
+                    previewGrid.appendChild(div);
+                }
+                reader.readAsDataURL(file);
+            });
+        } else {
+            submitBtn.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

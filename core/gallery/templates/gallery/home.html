@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* --- DASHBOARD HEADER --- */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end; /* Align bottom of text */
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e2e8f0;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .header-title h2 { margin: 0; font-size: 1.8rem; color: #0f172a; }
+    .header-title p { margin: 5px 0 0 0; color: #64748b; }
+
+    /* --- STATS PILLS --- */
+    .stats-row {
+        display: flex;
+        gap: 15px;
+    }
+
+    .stat-pill {
+        background: white;
+        border: 1px solid #e2e8f0;
+        padding: 8px 16px;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: #475569;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        text-decoration: none; /* Make them clickable links */
+        transition: all 0.2s;
+    }
+
+    .stat-pill:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .stat-pill strong {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .stat-icon { color: var(--primary); }
+
+    /* --- GALLERY GRID --- */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .photo-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #e5e7eb;
+        cursor: pointer;
+        display: block; /* Important for anchor tag */
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .photo-item:hover img {
+        transform: scale(1.05);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 16px;
+        border: 2px dashed #e2e8f0;
+    }
+</style>
+
+<!-- HEADER WITH STATS -->
+<div class="dashboard-header">
+    <div class="header-title">
+        <h2>My Library</h2>
+        <p>All your memories, organized by AI.</p>
+    </div>
+
+    <div class="stats-row">
+        <!-- Photos Count -->
+        <div class="stat-pill">
+            <i class="fa-regular fa-image stat-icon"></i>
+            <span><strong>{{ stats.photos }}</strong> Photos</span>
+        </div>
+
+        <!-- Events Count (Clickable) -->
+        <a href="{% url 'events' %}" class="stat-pill">
+            <i class="fa-regular fa-calendar-check stat-icon"></i>
+            <span><strong>{{ stats.events }}</strong> Events</span>
+        </a>
+
+        <!-- People Count (Clickable) -->
+        <a href="{% url 'people' %}" class="stat-pill">
+            <i class="fa-solid fa-user-group stat-icon"></i>
+            <span><strong>{{ stats.people }}</strong> People</span>
+        </a>
+    </div>
+</div>
+
+<!-- PHOTO GRID -->
+{% if photos %}
+    <div class="gallery-grid">
+        {% for photo in photos %}
+            <a href="{% url 'photo_single' photo.id %}" class="photo-item">
+                <img src="{{ photo.image.url }}" loading="lazy">
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div style="background: #eff6ff; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 30px; color: var(--primary);"></i>
+        </div>
+        <h3 style="margin-bottom: 10px;">Your gallery is empty</h3>
+        <p style="color: #64748b; margin-bottom: 20px;">Upload photos to start identifying people and creating events.</p>
+        <a href="{% url 'upload' %}" class="btn-upload" style="display: inline-flex;">Upload Photos</a>
+    </div>
+{% endif %}
+
+{% endblock %}

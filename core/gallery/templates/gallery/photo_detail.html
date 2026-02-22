@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Full Width Layout override for this page */
+    .main-content { padding: 0 !important; max-width: 100% !important; }
+    .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+
+    /* --- THEATER MODE (Top Section) --- */
+    .theater-stage {
+        background-color: #020617; /* Very Dark Blue/Black */
+        height: 85vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        /* Make it go behind the glass header */
+        margin-top: -70px;
+        padding-top: 70px;
+    }
+
+    .main-image {
+        max-height: 75vh;
+        max-width: 95%;
+        object-fit: contain;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    .back-btn {
+        position: absolute;
+        top: 90px; /* Adjusted for header height */
+        left: 30px;
+        color: white;
+        background: rgba(255,255,255,0.1);
+        padding: 8px 16px;
+        border-radius: 30px;
+        text-decoration: none;
+        backdrop-filter: blur(5px);
+        transition: background 0.2s;
+        font-size: 0.9rem;
+        z-index: 10;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* --- INFO SECTION (Bottom) --- */
+    .info-panel {
+        background: white;
+        padding: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* --- HORIZONTAL SLIDER FOR PEOPLE --- */
+    .people-slider-wrapper {
+        position: relative;
+        width: 100%;
+        overflow: hidden; /* Hide overflow outside wrapper */
+    }
+
+    .face-row {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto; /* Allow horizontal scroll */
+        padding-bottom: 10px; /* Space for scrollbar if visible */
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch; /* Smooth scroll on mobile */
+
+        /* Hide scrollbar for Chrome/Safari/Opera */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;  /* IE 10+ */
+    }
+
+    .face-row::-webkit-scrollbar {
+        display: none; /* Chrome/Safari/Opera */
+    }
+
+    .face-chip {
+        flex: 0 0 auto; /* Don't shrink, stay actual size */
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f8fafc;
+        padding: 6px 16px 6px 6px;
+        border-radius: 50px;
+        text-decoration: none;
+        color: #334155;
+        transition: all 0.2s;
+        border: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .face-chip:hover {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #2563eb;
+        transform: translateY(-2px);
+    }
+
+    .face-chip img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    /* --- RELATED PHOTOS GRID --- */
+    .similar-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    .similar-item {
+        aspect-ratio: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        display: block;
+    }
+
+    .similar-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+    .similar-item:hover img { transform: scale(1.05); }
+
+ .delete-btn {
+        position: absolute;
+        top: 90px; /* Aligned with back button */
+        right: 30px;
+        background: rgba(255, 0, 0, 0.2); /* Red tint */
+        color: #ffcccc;
+        border: 1px solid rgba(255, 0, 0, 0.3);
+        padding: 8px 16px;
+        border-radius: 30px;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+        transition: all 0.2s;
+        z-index: 10;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .delete-btn:hover {
+        background: rgba(220, 38, 38, 0.8); /* Bright Red on hover */
+        color: white;
+        border-color: rgba(220, 38, 38, 1);
+    }
+
+</style>
+
+<!-- 1. THEATER MODE -->
+<div class="theater-stage">
+    <a href="javascript:history.back()" class="back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+
+    <!-- DELETE BUTTON (New) -->
+    <form action="{% url 'delete_photo' photo.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this photo? This cannot be undone.');">
+        {% csrf_token %}
+        <button type="submit" class="delete-btn">
+            <i class="fa-regular fa-trash-can"></i> Delete
+        </button>
+    </form>
+
+    <img src="{{ photo.image.url }}" class="main-image">
+</div>
+
+<!-- 2. DETAILS & SIMILAR PHOTOS -->
+<div class="info-panel">
+
+    <!-- Header Info -->
+    <div style="margin-bottom: 30px;">
+        <h2 style="margin: 0; font-size: 1.5rem;">Photo Details</h2>
+        <p style="color:#64748b; margin: 5px 0;">
+            <i class="fa-regular fa-calendar"></i> Uploaded on {{ photo.uploaded_at|date:"F j, Y" }}
+        </p>
+    </div>
+
+    <!-- PEOPLE SLIDER -->
+    {% if faces %}
+        <h4 style="margin-bottom: 15px; font-weight: 600;">People in this photo</h4>
+
+        <div class="people-slider-wrapper">
+            <div class="face-row">
+                {% for face in faces %}
+                    <a href="{% url 'person_detail' face.person_group.id %}" class="face-chip">
+                        {% if face.person_group.cover_face %}
+                            <img src="{{ face.person_group.cover_face.url }}">
+                        {% else %}
+                            <div style="width:32px; height:32px; background:#ccc; border-radius:50%;"></div>
+                        {% endif %}
+                        <span>{{ face.person_group.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+            <!-- Optional: Fade effect on the right to indicate more content -->
+            <div style="position: absolute; right: 0; top: 0; height: 100%; width: 50px; background: linear-gradient(to right, transparent, white); pointer-events: none;"></div>
+        </div>
+    {% endif %}
+
+    <hr style="border:0; border-top:1px solid #e2e8f0; margin: 40px 0;">
+
+    <!-- RELATED PHOTOS -->
+    {% if similar_photos %}
+        <h4 style="margin-bottom: 20px; font-weight: 600;">Related Photos</h4>
+        <div class="similar-grid">
+            {% for sim in similar_photos %}
+                <a href="{% url 'photo_single' sim.id %}" class="similar-item">
+                    <img src="{{ sim.image.url }}">
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .events-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        padding: 20px 0;
+    }
+
+    .event-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid #e2e8f0;
+        display: block;
+    }
+
+    .event-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+
+    /* The Collage Preview inside the card */
+    .card-preview {
+        height: 200px;
+        display: grid;
+        grid-template-columns: 2fr 1fr; /* Big Left, Small Right */
+        gap: 2px;
+        background: #f1f5f9;
+    }
+
+    .preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+    .event-date { color: #64748b; font-size: 0.85rem; margin-bottom: 5px; }
+    .event-title { font-weight: 700; font-size: 1.1rem; margin: 0; color: #0f172a; }
+    .event-count { font-size: 0.85rem; color: #94a3b8; margin-top: 5px; }
+</style>
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>Moments & Events</h2>
+</div>
+
+<div class="events-grid">
+    {% for event in events %}
+        <a href="{% url 'event_detail' event.id %}" class="event-card">
+            <div class="card-preview">
+                <!-- Logic to show preview images -->
+                {% with pics=event.photos.all|slice:":3" %}
+                    {% if pics.0 %}
+                        <img src="{{ pics.0.image.url }}" class="preview-img" style="grid-row: span 2;">
+                    {% endif %}
+
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        {% if pics.1 %}
+                            <img src="{{ pics.1.image.url }}" class="preview-img" style="height: 50%;">
+                        {% endif %}
+                        {% if pics.2 %}
+                            <img src="{{ pics.2.image.url }}" class="preview-img" style="height: 50%;">
+                        {% endif %}
+                    </div>
+                {% endwith %}
+            </div>
+
+            <div class="card-body">
+                <div class="event-date">{{ event.date|date:"M d, Y" }}</div>
+                <h3 class="event-title">{{ event.title }}</h3>
+                <div class="event-count">{{ event.photos.count }} photos</div>
+            </div>
+        </a>
+    {% empty %}
+        <p>No events found. Upload some photos to get started!</p>
+    {% endfor %}
+</div>
+{% endblock %}

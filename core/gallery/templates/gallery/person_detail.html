@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Header Styling */
+    .person-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: white;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+        border: 1px solid #f0f0f0;
+    }
+
+    .header-avatar-wrapper {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        padding: 3px;
+        background: white;
+        border: 2px solid #eee;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .header-avatar {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    /* Rename Input Styling */
+    .rename-input {
+        font-family: 'Inter', sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text-main);
+        background: transparent;
+        padding: 5px 0;
+        outline: none;
+        width: 100%;
+        transition: all 0.2s;
+    }
+
+    .rename-input:focus {
+        border-bottom-color: var(--primary);
+    }
+
+    .rename-input:hover {
+        border-bottom-color: #e5e7eb;
+    }
+
+    .rename-hint {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-top: 5px;
+        display: block;
+    }
+
+    /* Grid Styling */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+    }
+
+    /* Updated Photo Item (Now an Anchor Tag) */
+    .photo-item {
+        display: block;
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        background-color: #f3f4f6;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+
+    .photo-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        z-index: 2;
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    /* Subtle zoom on image inside */
+    .photo-item:hover img {
+        transform: scale(1.05);
+    }
+</style>
+
+<div class="person-header">
+    <div class="header-avatar-wrapper">
+        {% if group.cover_face %}
+            <img src="{{ group.cover_face.url }}" class="header-avatar">
+        {% else %}
+            <div style="width:100%; height:100%; background:#e5e7eb; border-radius:50%;"></div>
+        {% endif %}
+    </div>
+
+    <div style="flex-grow: 1;">
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="name" value="{{ group.name }}" class="rename-input" placeholder="Name this person...">
+            <button type="submit" style="display:none;">Save</button>
+            <span class="rename-hint">Type a new name and press Enter to save</span>
+        </form>
+    </div>
+
+<!-- NEW COLLAGE BUTTON -->
+<div style="margin-left: 20px;">
+    <form action="{% url 'create_collage' group.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" style="
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(168, 85, 247, 0.4);
+            transition: transform 0.2s;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Collage
+        </button>
+    </form>
+</div>
+
+</div>
+
+<h3 style="margin-bottom: 15px; font-weight: 500; color: #4b5563;">
+    {{ photos|length }} Photos Found
+</h3>
+
+<div class="gallery-grid">
+    {% for photo in photos %}
+        <!-- LINK ADDED HERE: Opens the single photo view -->
+        <a href="{% url 'photo_single' photo.id %}" class="photo-item">
+            <img src="{{ photo.image.url }}" loading="lazy">
+        </a>
+    {% empty %}
+        <p style="grid-column: 1/-1; text-align: center; color: #888; padding: 40px;">
+            No photos found for this person yet.
+        </p>
+    {% endfor %}
+</div>
+
+{% endblock %}
